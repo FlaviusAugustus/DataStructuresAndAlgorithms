@@ -6,7 +6,7 @@ String::String() : buffer(nullptr), size() {}
 
 String::String(const String &other) : size(other.size) {
 
-    buffer = new char[other.size];
+    buffer = new char[other.size + 1];
 
     for(size_t i = 0; i < other.size; i++) { buffer[i] = other.buffer[i]; }
 
@@ -26,9 +26,9 @@ String::String(const char *str) {
     size_t newSize = 0;
 
     const char* checkSize = str;
-    while(*++checkSize) { newSize++; }
+    while(*checkSize++ != '\0') { newSize++; }
 
-    buffer = new char[++newSize];
+    buffer = new char[newSize + 1];
     this->size = newSize;
 
     for(size_t i = 0; i < newSize; i++) { buffer[i] = str[i]; }
@@ -39,13 +39,13 @@ String::String(const char *str) {
 
 String::~String() {
 
-    size = 0;
-    delete[] buffer;
+    clear();
 
 }
 
 bool String::operator==(const char *other) const {
 
+    if(!buffer || !other) { return false;}
     const char* thisStr = buffer;
 
     for(size_t i = 0; *other ; i++) {
@@ -55,6 +55,12 @@ bool String::operator==(const char *other) const {
     }
 
     return true;
+
+}
+
+bool String::operator!=(const char *other) const {
+
+    return !(*this == other);
 
 }
 
@@ -81,13 +87,10 @@ String &String::operator+=(const String &other) {
     String tmpOther(other);
     String tmpThis(*this);
 
-    tmpThis[size] = ' '; //delete null-termination char
-
     delete[] buffer;
-    buffer = new char[newSize];
-
+    buffer = new char[newSize + 1];
     for(size_t i = 0; i < size; i++) { buffer[i] = tmpThis[i]; }
-    for(size_t i = size; i < newSize; i++) { buffer[i] = tmpOther[i - size]; }
+    for(size_t i = 0; i < other.size; i++) { buffer[i + size] = tmpOther[i]; }
 
     buffer[newSize] = '\0';
     size = newSize;
@@ -98,14 +101,14 @@ String &String::operator+=(const String &other) {
 
 String &String::operator=(const char *other) {
 
+    if(!other) { return *this; }
+
     size_t newSize = 0;
     for(; *(other+newSize); newSize++) {}
 
     clear();
 
-    if(newSize == 0) { return *this; }
-
-    buffer = new char[newSize];
+    buffer = new char[newSize + 1];
     size = newSize;
 
     for(size_t i = 0; i < newSize; i++) { buffer[i] = other[i]; }
@@ -129,6 +132,7 @@ void String::clear() {
 
     size = 0;
     delete[] buffer;
+    buffer = nullptr;
 
 }
 
@@ -149,18 +153,17 @@ std::ostream& operator<<(std::ostream& out, const String& str) {
 
 std::istream& operator>>(std::istream& in, String& str) {
 
-    char* c = new char[String::BaseBufferSize];
-    char extract[2];
     size_t strSize = String::BaseBufferSize;
+    char* c = new char[strSize + 1];
+    int next;
     size_t charCount = 0;
 
-    while (in.get(extract, 2)) {
+    while ((next = in.get()) && !std::isspace(next)) {
 
-        if(*c == ' ') { break; }
         if(charCount >= strSize) {
 
             strSize *= 2;
-            char* newC = new char[strSize];
+            char* newC = new char[strSize + 1];
 
             for(int i = 0; c[i] ; i++) { newC[i] = c[i]; }
 
@@ -171,15 +174,29 @@ std::istream& operator>>(std::istream& in, String& str) {
 
         }
 
-        c[charCount] = extract[0];
-        charCount++;
+        c[charCount++] = next;
+
     }
 
     c[charCount] = '\0';
 
-    str.clear();
+    if(str.buffer) {str.clear();}
     str.size = charCount;
     str.buffer = c;
 
     return in;
 }
+
+String &String::operator=(const char other) {
+
+    String newString = " ";
+    newString[0] = other;
+    *this = newString;
+
+    return *this;
+
+}
+
+
+
+

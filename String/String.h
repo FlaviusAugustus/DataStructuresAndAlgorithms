@@ -1,30 +1,33 @@
+#pragma once
 #include <iostream>
 #include <initializer_list>
 
 class String {
 
-	char* buffer;
-	size_t size;
+    char* buffer;
+    size_t size;
 
     static const int BaseBufferSize;
 
-    public:
+    friend class Parser;
 
-	String();
+public:
 
-	String(String&& other);
+    String();
 
-	String(const String& other);
+    String(String&& other);
+
+    String(const String& other);
 
     String(const char* str);
 
-	~String();
+    ~String();
 
-	size_t length() const;
+    size_t length() const;
 
     operator const char* () const;
 
-	String& operator+=(const char* other);
+    String& operator+=(const char* other);
 
     String& operator+=(const String& other);
 
@@ -34,16 +37,32 @@ class String {
 
     bool operator==(const char* other) const;
 
+    bool operator!=(const char* other) const;
+
     bool operator==(const String& other) const;
 
-	String& operator=(const char* other);
+    String& operator=(const char other);
 
-	String& operator=(const String& other);
+    String& operator=(const char* other);
+
+    String& operator=(const String& other);
 
     void clear();
 
-	friend std::ostream& operator<<(std::ostream& out, const String& str);
+    friend std::ostream& operator<<(std::ostream& out, const String& str);
 
-	friend std::istream& operator>>(std::istream& in, String& str);
+    friend std::istream& getFromStream(std::istream& stream, String& in, int separatorFlags);
+
+    friend void removeFirstChar(String& str);
+
+    friend void removeLastChar(String& str);
+
+    friend bool isNumber(const String& str);
+
+    friend String splitString(const String& str, int len, char sep);
+
+    friend void intToString(int val, String& str);
+
+    friend std::istream& operator>>(std::istream& in, String& str);
 
 };
